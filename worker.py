@@ -1,45 +1,69 @@
 import os
-os.environ["DISCORD_DISABLE_VOICE"] = "1"
-import os,time,asyncio,discord
-from discord.ext import commands
-from dotenv import load_dotenv
-from database.db import init_db
+import time
+import hikari
+from database.db import Session, init_db
 from database.models import Subscription
-from database.db import Session
 
-load_dotenv()
-TOKEN=os.getenv("DISCORD_BOT_TOKEN")
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 if not TOKEN:
     raise RuntimeError("DISCORD_BOT_TOKEN is missing")
-    
-intents=discord.Intents.default()
-intents.message_content=True
-bot=commands.Bot(command_prefix="!",intents=intents)
 
-@bot.check
-async def sub_guard(ctx):
-    if not ctx.guild: return True
-    s=Session()
-    sub=s.query(Subscription).filter_by(guild_id=ctx.guild.id).first()
-    s.close()
-    if not sub: 
-        await ctx.send("⛔ البوت يتطلب اشتراك")
+bot = hikari.GatewayBot(
+    token=TOKEN,
+    intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.MESSAGE_CONTENT,
+)
+
+# ====== DATABASE INIT ======
+@bot.listen(hikari.StartedEvent)
+async def on_started(event):
+    init_db()
+    print("Bot ready (Hikari)")
+
+# ====== SUBSCRIPTION CHECK ======
+def check_subscription(guild_id: int) -> bool:
+    session = Session()
+    sub = session.query(Subscription).filter_by(guild_id=str(guild_id)).first()
+    session.close()
+
+    if not sub:
         return False
-    now=time.time()
-    if now<=sub.expires_at: return True
-    if now<=sub.grace_until:
-        await ctx.send("⚠️ الاشتراك منتهي – مهلة 48 ساعة")
+
+    now = time.time()
+    if now <= sub.expires_at:
         return True
-    await ctx.send("⛔ تم إيقاف البوت لانتهاء الاشتراك")
+
+    if now <= sub.grace_until:
+        return True
+
     return False
 
-@bot.event
-async def on_ready():
-    init_db()
-    print("Bot ready")
+# ====== COMMAND HANDLER ======
+@bot.listen(hikari.MessageCreateEvent)
+async def on_message(event):
+    if not event.is_human:
+        return
 
-async def main():
-    async with bot:
-        await bot.start(TOKEN)
+    content = event.content.strip()
+    if not content.startswith("!"):
+        return
 
-asyncio.run(main())
+    if not event.guild_id:
+        await event.message.respond("❌ الأوامر تعمل داخل السيرفر فقط")
+        return
+
+    if not check_subscription(event.guild_id):
+        await event.message.respond("⛔ هذا البوت يتطلب اشتراك نشط")
+        return
+
+    # ====== COMMANDS ======
+    if content == "!ping":
+        await event.message.respond("🏓 Pong!")
+
+    elif content == "!help":
+        await event.message.respond(
+            "الأوامر المتاحة:\n"
+            "!ping\n"
+            "!help"
+        )
+
+bot.run()
