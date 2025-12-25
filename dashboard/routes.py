@@ -17,7 +17,7 @@ def login():
         f"?client_id={DISCORD_CLIENT_ID}"
         f"&redirect_uri={DISCORD_REDIRECT_URI}"
         f"&response_type=code"
-        f"&scope=identify"
+        f"&scope=identify guilds"
     )
 
 @auth_bp.route("/auth/callback")
@@ -26,7 +26,7 @@ def callback():
     if not code:
         return redirect("/")
 
-    # Exchange code for token
+    # Exchange code for access token
     data = {
         "client_id": DISCORD_CLIENT_ID,
         "client_secret": DISCORD_CLIENT_SECRET,
@@ -37,17 +37,17 @@ def callback():
 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     token_res = requests.post(f"{DISCORD_API}/oauth2/token", data=data, headers=headers)
-    token = token_res.json().get("access_token")
+    token_json = token_res.json()
 
-    if not token:
+    access_token = token_json.get("access_token")
+    if not access_token:
         return redirect("/")
 
     # Get user info
     user_res = requests.get(
         f"{DISCORD_API}/users/@me",
-        headers={"Authorization": f"Bearer {token}"}
+        headers={"Authorization": f"Bearer {access_token}"}
     )
-
     user = user_res.json()
 
     session["user"] = {
@@ -55,6 +55,26 @@ def callback():
         "username": user["username"],
         "avatar": user["avatar"]
     }
+
+    # Get user guilds
+    guilds_res = requests.get(
+        f"{DISCORD_API}/users/@me/guilds",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+
+    guilds = guilds_res.json()
+
+    manageable_guilds = []
+    for g in guilds:
+        perms = int(g.get("permissions", 0))
+        if g.get("owner") or (perms & 0x20):
+            manageable_guilds.append({
+                "id": g["id"],
+                "name": g["name"],
+                "icon": g["icon"]
+            })
+
+    session["guilds"] = manageable_guilds
 
     return redirect("/dashboard")
 
