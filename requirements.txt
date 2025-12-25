@@ -1,0 +1,7 @@
+
+discord.py
+flask
+sqlalchemy
+python-dotenv
+requests
+Pillow
