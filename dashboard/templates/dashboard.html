@@ -13,6 +13,17 @@
             color: #e5e7eb;
         }
 
+{% if user %}
+<div style="margin-bottom:20px;">
+    <img 
+        src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png"
+        width="80"
+        style="border-radius:50%;"
+    >
+    <h3>{{ user.username }}</h3>
+</div>
+{% endif %}        
+        
         header {
             background: #020617;
             padding: 16px 24px;
