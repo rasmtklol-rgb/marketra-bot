@@ -4,7 +4,7 @@ import hikari
 from database.db import Session, init_db
 from database.models import Subscription
 
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+TOKEN = os.getenv("MTQ1MDk5MDM5MTE0NTc5MTYyMQ.GGrPjz.k1M80DzqGWINndJY5CF5WgEUa6Pscx0d5nE7SE")
 if not TOKEN:
     raise RuntimeError("DISCORD_BOT_TOKEN is missing")
 
