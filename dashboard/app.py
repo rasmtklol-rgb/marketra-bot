@@ -27,7 +27,8 @@ def landing():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    user = session.get("user")
+    return render_template("dashboard.html", user=user)
 
 # =========================
 # Security Headers
