@@ -7,8 +7,10 @@ from database.models import Subscription
 from database.db import Session
 
 load_dotenv()
-TOKEN=os.getenv("BOT_TOKEN")
-
+TOKEN=os.getenv("DISCORD_BOT_TOKEN")
+if not TOKEN:
+    raise RuntimeError("DISCORD_BOT_TOKEN is missing")
+    
 intents=discord.Intents.default()
 intents.message_content=True
 bot=commands.Bot(command_prefix="!",intents=intents)
