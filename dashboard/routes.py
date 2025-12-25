@@ -1,44 +1,17 @@
-import os
-from flask import Flask, session, redirect, render_template
-from dotenv import load_dotenv
+from flask import Blueprint, redirect, session
 
-load_dotenv()
+auth_bp = Blueprint("auth", __name__)
 
-app = Flask(__name__)
-app.secret_key = os.getenv("DASH_SECRET", "dev-secret")
+@auth_bp.route("/login")
+def login():
+    # Mock login (for testing)
+    session["user"] = {
+        "id": 1,
+        "username": "TestUser"
+    }
+    return redirect("/dashboard")
 
-# =========================
-# Import & Register Auth
-# =========================
-from dashboard.routes import auth_bp
-from dashboard.decorators import login_required
-
-app.register_blueprint(auth_bp)
-
-# =========================
-# Routes
-# =========================
-@app.route("/")
-def landing():
-    return render_template("landing.html")
-
-@app.route("/dashboard")
-@login_required
-def dashboard():
-    return render_template("dashboard.html")
-
-# =========================
-# Security Headers
-# =========================
-@app.after_request
-def security_headers(resp):
-    resp.headers["X-Frame-Options"] = "DENY"
-    resp.headers["X-Content-Type-Options"] = "nosniff"
-    return resp
-
-# =========================
-# Run (Render compatible)
-# =========================
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+@auth_bp.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
