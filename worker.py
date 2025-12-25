@@ -1,26 +1,33 @@
 import os
 import time
 import hikari
+from dotenv import load_dotenv
+
 from database.db import Session, init_db
 from database.models import Subscription
 
-TOKEN = os.getenv("MTQ1MDk5MDM5MTE0NTc5MTYyMQ.GGrPjz.k1M80DzqGWINndJY5CF5WgEUa6Pscx0d5nE7SE")
+# تحميل متغيرات البيئة من ملف .env إن وجد
+load_dotenv()
+
+# قراءة التوكن
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 if not TOKEN:
     raise RuntimeError("DISCORD_BOT_TOKEN is missing")
 
+# إنشاء البوت (بدون صوت)
 bot = hikari.GatewayBot(
     token=TOKEN,
     intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.MESSAGE_CONTENT,
 )
 
-# ====== DATABASE INIT ======
+# ====== عند تشغيل البوت ======
 @bot.listen(hikari.StartedEvent)
 async def on_started(event):
     init_db()
     print("Bot ready (Hikari)")
 
-# ====== SUBSCRIPTION CHECK ======
-def check_subscription(guild_id: int) -> bool:
+# ====== التحقق من الاشتراك ======
+def has_active_subscription(guild_id: int) -> bool:
     session = Session()
     sub = session.query(Subscription).filter_by(guild_id=str(guild_id)).first()
     session.close()
@@ -37,13 +44,14 @@ def check_subscription(guild_id: int) -> bool:
 
     return False
 
-# ====== COMMAND HANDLER ======
+# ====== أوامر نصية ======
 @bot.listen(hikari.MessageCreateEvent)
 async def on_message(event):
     if not event.is_human:
         return
 
-    content = event.content.strip()
+    content = (event.content or "").strip()
+
     if not content.startswith("!"):
         return
 
@@ -51,11 +59,11 @@ async def on_message(event):
         await event.message.respond("❌ الأوامر تعمل داخل السيرفر فقط")
         return
 
-    if not check_subscription(event.guild_id):
+    if not has_active_subscription(event.guild_id):
         await event.message.respond("⛔ هذا البوت يتطلب اشتراك نشط")
         return
 
-    # ====== COMMANDS ======
+    # ====== الأوامر ======
     if content == "!ping":
         await event.message.respond("🏓 Pong!")
 
@@ -66,4 +74,5 @@ async def on_message(event):
             "!help"
         )
 
+# تشغيل البوت
 bot.run()
