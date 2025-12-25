@@ -12,8 +12,8 @@ app.secret_key = os.getenv("DASH_SECRET", "fallback-secret")
 # =========================
 # Register Blueprints FIRST
 # =========================
-from dashboard.auth.routes import auth_bp
-from dashboard.auth.decorators import login_required
+from dashboard.routes import auth_bp
+from dashboard.decorators import login_required
 
 app.register_blueprint(auth_bp)
 
