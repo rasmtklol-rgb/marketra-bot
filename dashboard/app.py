@@ -21,7 +21,20 @@ def landing():
 def dashboard():
     user = session.get("user")
     guilds = session.get("guilds", [])
-    return render_template("dashboard.html", user=user, guilds=guilds)
+
+    invite_url = (
+        "https://discord.com/oauth2/authorize"
+        f"?client_id={os.getenv('DISCORD_CLIENT_ID')}"
+        "&scope=bot%20applications.commands"
+        "&permissions=8"
+    )
+
+    return render_template(
+        "dashboard.html",
+        user=user,
+        guilds=guilds,
+        invite_url=invite_url
+    )
 
 @app.after_request
 def security_headers(resp):
