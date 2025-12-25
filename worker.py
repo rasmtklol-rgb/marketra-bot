@@ -1,3 +1,5 @@
+import os
+os.environ["DISCORD_DISABLE_VOICE"] = "1"
 import os,time,asyncio,discord
 from discord.ext import commands
 from dotenv import load_dotenv
