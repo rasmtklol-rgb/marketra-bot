@@ -12,17 +12,6 @@
             background: #0f172a;
             color: #e5e7eb;
         }
-
-{% if user %}
-<div style="margin-bottom:20px;">
-    <img 
-        src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png"
-        width="80"
-        style="border-radius:50%;"
-    >
-    <h3>{{ user.username }}</h3>
-</div>
-{% endif %}        
         
         header {
             background: #020617;
@@ -89,6 +78,17 @@
     <div class="card">
         <h2>Welcome 👋</h2>
 
+{% if user %}
+<div style="margin-bottom:20px;">
+    <img 
+        src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png"
+        width="80"
+        style="border-radius:50%;"
+    >
+    <h3>{{ user.username }}</h3>
+</div>
+{% endif %}
+        
         <div class="info">
             You are logged in successfully using Discord OAuth.
         </div>
